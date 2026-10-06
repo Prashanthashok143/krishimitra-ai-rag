@@ -1,0 +1,42 @@
+DOCUMENT_ID: PJTSAU-KVK-WGL-2024-KHARIF-01
+AUTHORITY: Professor Jayashankar Telangana State Agricultural University (PJTSAU)
+REGION: Telangana - Warangal, Karimnagar, Khammam
+SEASON: Kharif
+
+[SECTION 1: COTTON CROP MANAGEMENT]
+Crop: Cotton (Gossypium hirsutum)
+Growth Stage: Flowering and Square Formation (45-75 Days After Sowing)
+
+1. Pink Bollworm (Pectinophora gossypiella) Control:
+- Economic Threshold Level (ETL): 8 rosette flowers per 100 plants or 10% damaged green bolls.
+- Monitoring: Fix 8 pheromone traps per acre at 45 days after sowing. Replace septa once every 21 days.
+- Chemical Intervention:
+  * When pest crosses ETL, spray Profenophos 50% EC at 2 ml per litre of water.
+  * Alternatively, spray Emamectin Benzoate 5% SG at 0.5 grams per litre of water.
+  * Do not repeatedly spray synthetic pyrethroids (Cypermethrin/Deltamethrin) as it triggers secondary pest resurgence like whitefly.
+
+2. Sucking Pests (Leafhoppers / Jassids and Thrips):
+- If leaf curling and margin yellowing are observed:
+  * Spray Flonicamid 50% WG at 0.3 grams per litre of water, OR Dinotefuran 20% SG at 0.4 grams per litre.
+  * For initial infestations: Apply 5% Neem Seed Kernel Extract (NSKE) or 1500 ppm Azadirachtin at 5 ml per litre of water.
+
+3. Split Fertilizer Schedule:
+- Apply Nitrogen in three split doses at 20, 40, and 60 days after sowing.
+- Per acre dose for black cotton soils: 25 kg Urea and 10 kg MOP (Muriate of Potash) top-dressed under adequate soil moisture.
+
+---
+
+[SECTION 2: CHILLI CROP MANAGEMENT]
+Crop: Chilli (Capsicum annuum)
+Growth Stage: Vegetative and Early Flowering
+
+1. Black Thrips (Thrips parvispinus) Control:
+- Symptoms: Curling of upper leaves upwards, discoloration of petals, shedding of flowers.
+- Cultural Management: Install blue and yellow sticky traps at 20-25 traps per acre.
+- Chemical Intervention:
+  * Spray Spinetoram 11.7% SC at 1 ml per litre of water, OR Fipronil 5% SC at 2 ml per litre of water.
+  * Alternate chemical sprays every 10 days to prevent pesticide resistance.
+
+2. Wilt and Root Rot Management:
+- Drench root zones with Copper Oxychloride (COC) 50% WP at 3 grams per litre of water.
+- For biological control, apply Trichoderma viride enriched farm yard manure (2 kg per 100 kg FYM) per acre.
