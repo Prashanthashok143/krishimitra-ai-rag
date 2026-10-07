@@ -109,7 +109,12 @@ async def upload_advisory(
             documents_to_insert.append({
                 "text":chunk["text"],
                 "embedding":embeding,
-                "metadata":chunk["metadata"],
+                "metadata": {
+                    "source": chunk["source"],
+                    "page_number": chunk["page_number"],
+                    "chunk_index": chunk["chunk_index"],
+                    "crop": chunk["crop"],
+                },
             })
             
             
@@ -119,7 +124,7 @@ async def upload_advisory(
         return UploadAdvisoryResponse(
             filename=file.filename,
             crop=crop,
-            total_pages=chunks[-1]["metadata"]["page_number"] if chunks else 0,
+            total_pages=max(chunk["page_number"] for chunk in chunks),
             chunks_created=inserted_count,
             message=f"Successfully indexed {inserted_count} chunks from {file.filename}.",
         )
