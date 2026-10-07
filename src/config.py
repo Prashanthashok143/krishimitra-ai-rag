@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     
     
     GEMINI_API_KEY: str
+    OPENROUTER_API_KEY: str
+    OPENROUTER_MODEL: str = "openrouter/free"
     
     MONGO_URI: str
     MONGODB_DATABASE_NAME: str ="KrishiMitra_db"
