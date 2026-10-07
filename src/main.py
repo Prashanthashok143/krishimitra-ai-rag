@@ -8,14 +8,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.config import get_settings;
 from src.database import DatabaseManager;
 
-from src.schemas import (
+from src.services.schemas import (
     AdvisoryQueryRequest,
     AdvisoryQueryResponse,
     RetrievedSource,
     UploadAdvisoryResponse,
 )
 
-from src.services.document_processor import DocumentProcessor
+from src.services.document_processor import DocumentProcessor;
 from src.services.embedding_service import EmbeddingService;
 from src.services.generator_service import GeneratorService;
 from src.services.vector_store import VectorStoreService;
@@ -35,8 +35,8 @@ async def lifespan(app:FastAPI):
     try:
         await DatabaseManager.connect_to_mongo();
         logger.info("MongoDB Atlas connection established");
-    except Exception as exc:
-        logger.critical("Failed to connect to MongoDb Atlas",exc)
+    except Exception:
+        logger.exception("Failed to connect to MongoDB Atlas")
         raise
     yield
     logger.info("Shutting down %s...", settings.APP_NAME)
