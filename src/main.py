@@ -136,7 +136,13 @@ async def upload_advisory(
             detail=f"Advisory ingestion failed: {str(exc)}",
         )
         
-        
+
+@app.post(
+    "/api/v1/query",
+    response_model=AdvisoryQueryResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Farmer Advisory QA"],
+)      
 async def query_advisory(payload:AdvisoryQueryRequest):
     try:
         query_vector =  embedding_service.embed_text(
