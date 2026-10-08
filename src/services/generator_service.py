@@ -1,5 +1,6 @@
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any;
+import re;
 
 from openai import AsyncOpenAI
 from tenacity import retry, stop_after_attempt, wait_random_exponential
@@ -8,6 +9,7 @@ from  src.config import get_settings
 logger = logging.getLogger(__name__)
 
 SYSTEM_INSTRUCTION = """You are KrishiMitra AI (రైతు మిత్ర / कृषिमित्र), an authoritative agricultural expert assistant for farmers in Telangana, India.
+IMPORTANT: Provide your final advisory answer DIRECTLY. Do NOT output internal reasoning, thought process, or preamble. Begin immediately with the practical advisory instructions.
 
 Your primary duty is to provide safe, actionable, and grounded agricultural advice based EXCLUSIVELY on the provided official advisory excerpts.
 
@@ -53,7 +55,25 @@ class GeneratorService:
 
         return "\n\n".join(formatted_sections);
 
-    
+    def _clean_model_output(self, raw_text: str) -> str:
+        """Strips chain-of-thought, XML tags, and reasoning preambles."""
+        if not raw_text:
+            return "No response generated."
+
+        # Remove XML-style <think>...</think> reasoning blocks
+        cleaned = re.sub(r"<think>.*?</think>", "", raw_text, flags=re.DOTALL)
+
+        # Remove leaked chain-of-thought text patterns like "Here's a thinking process:"
+        if "Here's a thinking process:" in cleaned:
+            parts = re.split(
+                r"(?:Final Answer:|Recommendation:|### Answer|Advisory:)",
+                cleaned,
+                flags=re.IGNORECASE,
+            )
+            if len(parts) > 1:
+                cleaned = parts[-1]
+
+        return cleaned.strip()
     @retry(stop=stop_after_attempt(3), wait=wait_random_exponential(min=1,max=10))
      
     async def generate_grounded_answer(
@@ -81,8 +101,10 @@ class GeneratorService:
                     {"role": "user", "content": user_content},
                 ],
                  temperature=0.2,
-                 max_tokens=1000)
-             return response.choices[0].message.content or "No response generated";
+                 max_tokens=1500)
+             raw_text = response.choices[0].message.content or ""
+             cleaned_text = self._clean_model_output(raw_text)
+             return cleaned_text or "Unable to generate an advisory at this moment."
          
          except Exception as exc:
              logger.error("OpenRouter infernece failed",exc_info=True)
