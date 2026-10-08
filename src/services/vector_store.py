@@ -27,7 +27,6 @@ class VectorStoreService:
     async def  search_similar_chunks(self,
                                      query_vector: List[float],
                                      top_k:int=4,
-                                     crop_filter:Optional[str] = None,
                                      ) -> List[Dict[str, Any]]:
         """
         Search for similar document chunks in the vector store based on a query vector.
@@ -43,11 +42,6 @@ class VectorStoreService:
             "numCandidates": max(60, top_k * 5),
             "limit":top_k
         }
-        
-        if crop_filter:
-            vector_search_stage["filter"] = {
-                "crop": crop_filter
-                }
         pipeline=[
             {"$vectorSearch": vector_search_stage},
             {

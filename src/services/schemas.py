@@ -18,7 +18,7 @@ class DocumentChunk(BaseModel):
 
 class UploadAdvisoryResponse(BaseModel):
     filename: str
-    crop: str
+    crop: Optional[str] = None
     total_pages: int
     chunks_created: int
     message: str

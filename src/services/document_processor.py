@@ -1,11 +1,35 @@
 from pathlib import Path
-from typing import List, Dict, Any;
+from typing import List, Dict,Set, Any;
 from pypdf import PdfReader;
 import re;
 import logging;
 from langchain_text_splitters import RecursiveCharacterTextSplitter;
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__);
+
+
+# Production Agricultural & Welfare Taxonomy for Telangana
+AGRICULTURAL_TAXONOMY = {
+    "crops": {
+        "Cotton": ["cotton", "kapas", "gossypium"],
+        "Chilli": ["chilli", "mirapa", "capsicum"],
+        "Paddy": ["paddy", "rice", "vari"],
+        "Maize": ["maize", "corn", "mokkajonna"],
+        "Pulses": ["redgram", "greengram", "blackgram", "bengalgram"],
+    },
+    "pests_diseases": {
+        "Pink Bollworm": ["pink bollworm", "pectinophora", "rosette flower"],
+        "Sucking Pests": ["aphid", "jassid", "whitefly", "hopper burn"],
+        "Black Thrips": ["black thrips", "thrips parvispinus"],
+        "Anthracnose": ["anthracnose", "die-back", "fruit rot", "colletotrichum"],
+        "Wilt": ["fusarium", "wilt", "root rot"],
+    },
+    "schemes": {
+        "Rythu Bharosa": ["rythu bharosa", "investment support", "dharani portal", "pattadar"],
+        "Rythu Bima": ["rythu bima", "farmers life insurance", "nominee", "5,00,000"],
+        "TSMIP": ["tsmip", "micro irrigation", "drip irrigation", "sprinkler"],
+    },
+}
 
 class DocumentProcessor:
     
@@ -39,8 +63,46 @@ class DocumentProcessor:
         text = re.sub(r"\n{3,}", "\n\n", text)
         return text.strip();
     
-    
-    def process_pdf(self, file_path: str,crop: str)->List[Dict[str, Any]]:
+    def _extract_taxonomy(self, text: str) -> Dict[str, Any]:
+        """
+        Determines the primary category, mentioned crops, and key entities.
+        """
+        text_lower = text.lower()
+
+        detected_crops: Set[str] = set()
+        detected_pests: Set[str] = set()
+        detected_schemes: Set[str] = set()
+
+        for crop_name, keywords in AGRICULTURAL_TAXONOMY["crops"].items():
+            if any(k in text_lower for k in keywords):
+                detected_crops.add(crop_name)
+
+        for pest_name, keywords in AGRICULTURAL_TAXONOMY["pests_diseases"].items():
+            if any(k in text_lower for k in keywords):
+                detected_pests.add(pest_name)
+
+        for scheme_name, keywords in AGRICULTURAL_TAXONOMY["schemes"].items():
+            if any(k in text_lower for k in keywords):
+                detected_schemes.add(scheme_name)
+
+        # Infer broad category
+        if detected_schemes:
+            category = "Government Scheme"
+        elif detected_crops or detected_pests:
+            category = "Crop Management"
+        elif any(k in text_lower for k in ["rainfall", "temperature", "agro-climatic", "weather"]):
+            category = "Agro-Climatic Advisory"
+        else:
+            category = "General Agronomy"
+
+        all_entities = list(detected_pests | detected_schemes)
+
+        return {
+            "category": category,
+            "crops": list(detected_crops),
+            "entities": all_entities,
+        }
+    def process_pdf(self, file_path: str)->List[Dict[str, Any]]:
         """
         Process a PDF file and return a list of text chunks.
         
@@ -55,7 +117,7 @@ class DocumentProcessor:
             raise ValueError(f"Invalid PDF file path: {file_path}");
         
         filename = path.name;
-        logger.info(f"Processing PDF file: {filename}, Crop: {crop}, Total Pages: {len(reader.pages)}");
+        logger.info(f"Processing PDF file: {filename}, Total Pages: {len(reader.pages)}");
         
         for page_number, page in enumerate(reader.pages, start=1):
             text = page.extract_text() or "";
@@ -67,13 +129,16 @@ class DocumentProcessor:
             if cleaned_text:
                 page_chunks = self.splitter.split_text(cleaned_text);
                 for idx, chunk in enumerate(page_chunks):
+                    taxonomy = self._extract_taxonomy(chunk);
                     chunks.append({
                         "source": filename,
                         "filename": filename,
                         "page_number": page_number,
                         "text": chunk,
                         "chunk_index": idx,
-                        "crop": crop
+                        "category": taxonomy["category"],
+                        "crops": taxonomy["crops"],
+                        "entities": taxonomy["entities"],
                     });
         logger.info(f"Total chunks created from {filename}: {len(chunks)}");
         return chunks;

@@ -1,4 +1,6 @@
 import logging
+import os
+import tempfile
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -80,7 +82,6 @@ async def health_check():
 )
 async def upload_advisory(
     file:UploadFile = File(...,description="offcial Pdf"),
-    crop:str=Form(...,description="target")
 ):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
@@ -90,13 +91,15 @@ async def upload_advisory(
     try:
         content = await file.read()
         
-        import tempfile
         with tempfile.NamedTemporaryFile(delete=False,suffix=".pdf") as tmp:
              tmp.write(content)
              tmp_path=tmp.name;
-        chunks = doc_processor.process_pdf(file_path=tmp_path,crop=crop)
-        import os
-        os.remove(tmp_path)
+        try:
+            chunks = doc_processor.process_pdf(file_path=tmp_path)
+        finally:
+            os.remove(tmp_path)
+        for chunk in chunks:
+            chunk["source"] = file.filename
         if not chunks:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -106,15 +109,21 @@ async def upload_advisory(
         embeddings = embedding_service.embed_documents_batch(texts);
         documents_to_insert=[];
         for chunk ,embeding in zip(chunks,embeddings):
+            metadata = {
+                "source": chunk["source"],
+                "page_number": chunk["page_number"],
+                "chunk_index": chunk["chunk_index"],
+                "category": chunk["category"],
+            }
+            if chunk["crops"]:
+                metadata["crops"] = chunk["crops"]
+            if chunk["entities"]:
+                metadata["entities"] = chunk["entities"]
+
             documents_to_insert.append({
                 "text":chunk["text"],
                 "embedding":embeding,
-                "metadata": {
-                    "source": chunk["source"],
-                    "page_number": chunk["page_number"],
-                    "chunk_index": chunk["chunk_index"],
-                    "crop": chunk["crop"],
-                },
+                "metadata": metadata,
             })
             
             
@@ -123,12 +132,13 @@ async def upload_advisory(
 
         return UploadAdvisoryResponse(
             filename=file.filename,
-            crop=crop,
             total_pages=max(chunk["page_number"] for chunk in chunks),
             chunks_created=inserted_count,
             message=f"Successfully indexed {inserted_count} chunks from {file.filename}.",
         )
 
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.error("Failed to process advisory upload: %s", exc, exc_info=True)
         raise HTTPException(
@@ -152,8 +162,7 @@ async def query_advisory(payload:AdvisoryQueryRequest):
         
         retrieved_chunks = await vector_store.search_similar_chunks(
             query_vector=query_vector,
-            top_k=payload.top_k,
-            crop_filter=payload.crop,    
+            top_k=payload.top_k,    
         )
         answer = await generator_service.generate_grounded_answer(
             question=payload.question,
