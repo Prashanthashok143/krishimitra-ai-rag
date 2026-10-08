@@ -50,6 +50,7 @@ class RetrievedSource(BaseModel):
     page_number: int
     chunk_index: int
     crop: Optional[str] = None
+    relevance_score: float
     
 class AdvisoryQueryResponse(BaseModel):
     answer: str

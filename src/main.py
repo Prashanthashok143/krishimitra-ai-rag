@@ -169,15 +169,19 @@ async def query_advisory(payload:AdvisoryQueryRequest):
             retrieved_chunks=retrieved_chunks,
         )
         
-        sources = [
-            RetrievedSource(
-                source_file=chunk.get("metadata", {}).get("source", "Unknown"),
-                page_number=chunk.get("metadata", {}).get("page_number", 0),
-                crop=chunk.get("metadata", {}).get("crop", "General"),
-                relevance_score=round(chunk.get("score", 0.0), 4),
+        sources = []
+        for chunk in retrieved_chunks:
+            metadata = chunk.get("metadata", {})
+            crops = metadata.get("crops", [])
+            sources.append(
+                RetrievedSource(
+                    source_file=metadata.get("source", "Unknown"),
+                    page_number=metadata.get("page_number", 0),
+                    chunk_index=metadata["chunk_index"],
+                    crop=crops[0] if crops else None,
+                    relevance_score=round(chunk.get("score", 0.0), 4),
+                )
             )
-            for chunk in retrieved_chunks
-        ]
 
         return AdvisoryQueryResponse(
             answer=answer,
